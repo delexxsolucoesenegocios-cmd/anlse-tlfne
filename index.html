@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Análise de Telefone · IAPol®</title>
+  <link rel="icon" type="image/png" href="./favicon.png">
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --bg:#0a0f1a; --card:#0f1422; --line:#1e4d92;
+      --brand:#1677ff; --brand-2:#0b5ed7;
+      --text:#eaf2ff; --muted:#a9c0e6;
+    }
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);margin:0}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+
+    /* Cabeçalho */
+    header{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{width:54px;height:54px;object-fit:contain;border-radius:50%}
+    .brand h1{font-size:32px;margin:0;color:#d8e8ff;line-height:1.1}
+    .brand .badge{
+      margin-top:6px;display:inline-block;padding:6px 14px;border-radius:999px;
+      background:#0f203f;border:1px solid var(--line);color:#dbeaff;
+      font-weight:700;font-size:12px;letter-spacing:.3px
+    }
+
+    /* Cartão / formulário */
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.28);padding:20px}
+    form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    input[type=text]{flex:1;min-width:280px;padding:12px 14px;border-radius:12px;border:1px solid #1b3b6f;background:#0f1422;color:#f0f6ff}
+    input.invalid{border-color:#e5534b;outline-color:#e5534b}
+    button{padding:12px 16px;border-radius:12px;border:0;background:var(--brand);color:#fff;font-weight:700;cursor:pointer}
+    button:hover{background:var(--brand-2)}
+    .actions{display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap}
+
+    /* Grade de resultados */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:8px}
+    .group{border:1px solid var(--line);border-radius:12px;padding:12px;background:#0f1422}
+    .group h2{font-size:15px;margin:0 0 8px;color:#a9d1ff}
+    ul{list-style:none;margin:0;padding:0}
+    li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+    li:last-child{border-bottom:0}
+    a{color:#9dc9ff;text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .footer{margin-top:12px;text-align:center;color:var(--muted);font-size:12px}
+    .hint{font-size:12px;color:#9db3dc;margin-top:6px}
+    .pill{display:inline-block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#0f203f;color:#d7e7ff;margin:4px 6px 0 0;font-weight:600}
+  </style>
+  <!-- jsPDF (PDF) e SheetJS (XLSX) -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <img src="./iapol-logo.png" alt="IAPol®" onerror="this.style.display='none'">
+        <div>
+          <h1>Análise de Telefone</h1>
+          <div class="badge">IAPol® | Inteligência Artificial Policial</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="card">
+      <form onsubmit="return gerar()">
+        <input type="text" id="fone" inputmode="tel" autocomplete="off"
+               placeholder="Digite o telefone/WhatsApp (ex.: +55 11 91234-5678)" oninput="maskPhone(this)" />
+        <button type="submit">Analisar</button>
+      </form>
+
+      <!-- Formatos normalizados renderizados (só informativo) -->
+      <div id="fmtBox" class="hint" style="display:none"></div>
+
+      <!-- Exportações -->
+      <div class="actions" id="exportBar" style="display:none">
+        <button type="button" onclick="exportCSV()">Exportar CSV</button>
+        <button type="button" onclick="exportPDF()">Exportar PDF</button>
+        <button type="button" onclick="exportTXT()">Exportar TXT</button>
+        <button type="button" onclick="exportXLSX()">Exportar XLSX</button>
+      </div>
+
+      <!-- Resultados -->
+      <div class="grid" id="results"></div>
+    </div>
+
+    <div class="footer">IAPol® · uso responsável (LGPD/leis vigentes)</div>
+  </div>
+
+<script>
+/* ================== Telefone: máscara e normalização (BR) ================== */
+/* Aceita com/sem +55; DDD (2); número 8 ou 9 dígitos (móvel começa com 9) */
+function onlyDigits(s){ return (s||"").replace(/\D+/g,""); }
+
+/* máscara amigável para digitação */
+function maskPhone(inp){
+  let v = inp.value.replace(/[^\d+]/g,'');
+  // preserva + no início se houver
+  const hasPlus = v.startsWith('+');
+  v = (hasPlus?'+':'') + v.replace(/[+]/g,'').replace(/\s+/g,'');
+  // não aplicar máscara completa, só espaços básicos
+  inp.value = v;
+}
+
+function normalizeBR(phone){
+  const raw = onlyDigits(phone);
+  if(!raw) return null;
+
+  // detecta DDI
+  let ddi='', rest=raw;
+  if(rest.length>=12 && (rest.startsWith('55') || rest.startsWith('550'))){
+    ddi='55'; rest = rest.replace(/^55/,'');
+  }
+  // remove zeros à esquerda indevidos
+  rest = rest.replace(/^0+/,''); // discadores
+
+  // DDD (2) + número (8 ou 9)
+  if(rest.length<10 || rest.length>11) return null;
+  const ddd = rest.slice(0,2);
+  let num = rest.slice(2);
+
+  // monta formatos
+  const e164 = `+55${ddd}${num}`;              // +5511912345678
+  const semDDI = `${ddd}${num}`;               // 11912345678
+  const nice = `(${ddd}) ${num.length===9?num[0]+' '+num.slice(1,5)+'-'+num.slice(5):num.slice(0,4)+'-'+num.slice(4)}`;
+
+  return { ok:true, raw:raw, ddi:'55', ddd, num, e164, semDDI, nice };
+}
+
+/* ================== Diretórios / Dorks ================== */
+const GRUPOS = [
+  ["Ações rápidas", [
+    ["Abrir conversa WhatsApp (wa.me)", "https://wa.me/%E164%"],
+    ["Busca no Truecaller", "https://www.truecaller.com/search/br/%SEMDDI%"],
+    ["Busca no Sync.me", "https://sync.me/search/?number=%E164%"]
+  ]],
+  ["Motores (dorks por número)", [
+    ["Google (todas variações)", "https://www.google.com/search?q=%22%E164%%22+OR+%22%NICE%%22+OR+%SEMDDI%"],
+    ["Bing", "https://www.bing.com/search?q=%22%E164%%22+OR+%22%NICE%%22+OR+%SEMDDI%"],
+    ["DuckDuckGo", "https://duckduckgo.com/?q=%22%E164%%22+OR+%22%NICE%%22+OR+%SEMDDI%"]
+  ]],
+  ["WhatsApp/Redes", [
+    ["Links encurtados (wa.me / api.whatsapp.com) — Google",
+     "https://www.google.com/search?q=site:wa.me+%SEMDDI%+OR+site:api.whatsapp.com+%SEMDDI%"],
+    ["Facebook — Google", "https://www.google.com/search?q=site:facebook.com+%SEMDDI%+OR+%22%E164%%22"],
+    ["Instagram — Google", "https://www.google.com/search?q=site:instagram.com+%SEMDDI%+OR+%22%E164%%22"],
+    ["LinkedIn — Google", "https://www.google.com/search?q=site:linkedin.com+%SEMDDI%+OR+%22%E164%%22"],
+    ["Twitter/X — Google", "https://www.google.com/search?q=site:x.com+OR+site:twitter.com+%SEMDDI%"]
+  ]],
+  ["Transparência/Diários/Justiça", [
+    ["Diário Oficial (IN) — Google", "https://www.google.com/search?q=site:in.gov.br+%SEMDDI%+OR+%22%E164%%22"],
+    ["Portais *.jus.br — Google", "https://www.google.com/search?q=site:*.jus.br+%SEMDDI%+OR+%22%E164%%22"],
+    ["Transparência (genérica) — Google", "https://www.google.com/search?q=site:transparencia.*+%SEMDDI%+OR+%22%E164%%22"]
+  ]],
+  ["Documentos por número", [
+    ["PDF", "https://www.google.com/search?q=filetype:pdf+%SEMDDI%+OR+%22%E164%%22+OR+%22%NICE%%22"],
+    ["DOCX", "https://www.google.com/search?q=filetype:docx+%SEMDDI%+OR+%22%E164%%22"],
+    ["XLSX", "https://www.google.com/search?q=filetype:xlsx+%SEMDDI%+OR+%22%E164%%22"],
+    ["PPT", "https://www.google.com/search?q=filetype:ppt+%SEMDDI%+OR+%22%E164%%22"]
+  ]]
+];
+
+function buildUrl(tpl, f){
+  return tpl
+    .replaceAll("%E164%", encodeURIComponent(f.e164.replace('+','')))
+    .replaceAll("%SEMDDI%", encodeURIComponent(f.semDDI))
+    .replaceAll("%NICE%", encodeURIComponent(f.nice));
+}
+
+/* ================== Montagem UI ================== */
+function montar(f){
+  const results = document.getElementById("results");
+  const bar = document.getElementById("exportBar");
+  const fmtBox = document.getElementById("fmtBox");
+  results.innerHTML = "";
+
+  // mostra formatos normalizados para referência
+  fmtBox.innerHTML = `
+    <span class="pill">E.164: +${f.e164.replace('+','')}</span>
+    <span class="pill">Nacional: ${f.nice}</span>
+    <span class="pill">Sem DDI: ${f.semDDI}</span>`;
+  fmtBox.style.display = "block";
+
+  GRUPOS.forEach(([titulo, itens])=>{
+    const box = document.createElement("div");
+    box.className = "group";
+    const h2 = document.createElement("h2"); h2.textContent = titulo;
+    const ul = document.createElement("ul");
+
+    itens.forEach(([label, tpl])=>{
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.textContent = label; a.target = "_blank"; a.rel = "noopener";
+      a.href = buildUrl(tpl, f);
+      li.appendChild(a); ul.appendChild(li);
+    });
+
+    box.appendChild(h2); box.appendChild(ul); results.appendChild(box);
+  });
+
+  bar.style.display = "flex";
+}
+
+/* ================== Exportações ================== */
+function buildRows(f){
+  const rows=[];
+  GRUPOS.forEach(([grupo,itens])=>{
+    itens.forEach(([fonte,tpl])=>{
+      rows.push({
+        TELEFONE_E164: `+${f.e164.replace('+','')}`,
+        TELEFONE_NACIONAL: f.nice,
+        TELEFONE_SEM_DDI: f.semDDI,
+        GRUPO: grupo, FONTE: fonte, URL: buildUrl(tpl,f)
+      });
+    });
+  });
+  return rows;
+}
+function exportCSV(){
+  const st = window.__fone_state;
+  if(!st){ alert("Faça a análise primeiro."); return; }
+  const rows = buildRows(st);
+  let csv = "E164;NACIONAL;SEM_DDI;GRUPO;FONTE;URL\n";
+  rows.forEach(r=>{
+    csv += `"${r.TELEFONE_E164}";"${r.TELEFONE_NACIONAL}";"${r.TELEFONE_SEM_DDI}";`
+        + `"${r.GRUPO.replace(/"/g,'""')}";"${r.FONTE.replace(/"/g,'""')}";"${r.URL.replace(/"/g,'""')}"\n`;
+  });
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`IAPol_Analise_Telefone_${st.semDDI}.csv`; a.click();
+}
+function exportTXT(){
+  const st = window.__fone_state;
+  if(!st){ alert("Faça a análise primeiro."); return; }
+  const rows = buildRows(st);
+  let txt = `IAPol® — Análise de Telefone\nE.164: +${st.e164.replace('+','')}\nNacional: ${st.nice}\nSem DDI: ${st.semDDI}\nData: ${new Date().toLocaleString("pt-BR")}\n\n`;
+  rows.forEach(r=>{ txt += `- [${r.GRUPO}] ${r.FONTE}: ${r.URL}\n`; });
+  const blob = new Blob([txt], {type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`IAPol_Analise_Telefone_${st.semDDI}.txt`; a.click();
+}
+function exportPDF(){
+  const st = window.__fone_state;
+  if(!st){ alert("Faça a análise primeiro."); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"pt", format:"a4" });
+  const m=48; let y=m;
+  doc.setFont("helvetica","bold"); doc.setFontSize(16);
+  doc.text("IAPol® — Análise de Telefone", m, y); y+=18;
+  doc.setFont("helvetica","normal"); doc.setFontSize(12);
+  doc.text(`E.164: +${st.e164.replace('+','')}`, m, y); y+=14;
+  doc.text(`Nacional: ${st.nice}    |    Sem DDI: ${st.semDDI}`, m, y); y+=18;
+  doc.text(`Data: ${new Date().toLocaleString("pt-BR")}`, m, y); y+=18;
+
+  const rows = buildRows(st);
+  doc.setFontSize(11);
+  let gAtual = "";
+  rows.forEach(r=>{
+    if(r.GRUPO!==gAtual){
+      if(y>780){ doc.addPage(); y=m; }
+      gAtual=r.GRUPO; doc.setFont("helvetica","bold"); doc.text(gAtual, m, y); y+=12;
+      doc.setFont("helvetica","normal");
+    }
+    const ln = `• ${r.FONTE}: ${r.URL}`;
+    const parts = doc.splitTextToSize(ln, 515);
+    parts.forEach(L=>{ if(y>800){ doc.addPage(); y=m; } doc.text(L, m, y); y+=14; });
+  });
+
+  if(y>800){ doc.addPage(); y=m; }
+  doc.setDrawColor(160); doc.line(m,820,595-m,820);
+  doc.setFontSize(9); doc.setTextColor(120);
+  doc.text("IAPol® · uso responsável (LGPD/leis vigentes) · Portais podem exigir CAPTCHA/login", m, 838);
+  doc.save(`IAPol_Analise_Telefone_${st.semDDI}.pdf`);
+}
+function exportXLSX(){
+  const st = window.__fone_state;
+  if(!st){ alert("Faça a análise primeiro."); return; }
+  const rows = buildRows(st);
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "AnaliseTelefone");
+  XLSX.writeFile(wb, `IAPol_Analise_Telefone_${st.semDDI}.xlsx`);
+}
+
+/* ================== Fluxo ================== */
+function gerar(){
+  const input = document.getElementById("fone");
+  const fmt = normalizeBR(input.value);
+  input.classList.toggle("invalid", !fmt);
+  if(!fmt){ alert("Telefone inválido. Use DDD e número (ex.: +55 11 91234-5678)."); return false; }
+  window.__fone_state = fmt;
+  history.replaceState({}, "", location.pathname + "?q=" + encodeURIComponent(fmt.e164));
+  montar(fmt);
+  return false;
+}
+
+/* Suporte a URL ?q=+5511912345678 */
+(function init(){
+  const p = new URLSearchParams(location.search);
+  const q = p.get("q");
+  if(q){
+    document.getElementById("fone").value = q;
+    const fmt = normalizeBR(q);
+    if(fmt){ window.__fone_state = fmt; montar(fmt); }
+  }
+})();
+</script>
+</body>
+</html>
