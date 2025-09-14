@@ -7,11 +7,7 @@
 <link rel="icon" type="image/png" href="./favicon.png">
 <meta name="robots" content="noindex,nofollow" />
 <style>
-  :root{
-    --bg:#0a0f1a; --card:#0f1422; --line:#1e4d92;
-    --brand:#1677ff; --brand-2:#0b5ed7;
-    --text:#eaf2ff; --muted:#a9c0e6;
-  }
+  :root{ --bg:#0a0f1a; --card:#0f1422; --line:#1e4d92; --brand:#1677ff; --brand-2:#0b5ed7; --text:#eaf2ff; --muted:#a9c0e6; --soft:#0f203f; --bad:#e5534b; }
   *{box-sizing:border-box}
   body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);margin:0}
   .wrap{max-width:1180px;margin:0 auto;padding:24px}
@@ -20,31 +16,43 @@
   .brand{display:flex;align-items:center;gap:12px}
   .brand img{width:54px;height:54px;object-fit:contain;border-radius:50%}
   .brand h1{font-size:32px;margin:0;color:#d8e8ff;line-height:1.1}
-  .brand .badge{
-    margin-top:6px;display:inline-block;padding:6px 14px;border-radius:999px;
-    background:#0f203f;border:1px solid var(--line);color:#dbeaff;
-    font-weight:700;font-size:12px;letter-spacing:.3px
-  }
+  .badge{margin-top:6px;display:inline-block;padding:6px 14px;border-radius:999px;background:#0f203f;border:1px solid var(--line);color:#dbeaff;font-weight:700;font-size:12px;letter-spacing:.3px}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.28);padding:20px}
-  .sub{color:var(--muted);margin:6px 0 12px}
-  form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .sub{color:#d2e3ff;margin:0 0 12px}
+  form{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
   input[type=text]{flex:1;min-width:280px;padding:12px 14px;border-radius:12px;border:1px solid #1b3b6f;background:#0f1422;color:#f0f6ff}
-  input.invalid{border-color:#e5534b;outline-color:#e5534b}
+  input.invalid{border-color:var(--bad);outline-color:var(--bad)}
   button{padding:12px 16px;border-radius:12px;border:0;background:var(--brand);color:#fff;font-weight:700;cursor:pointer}
   button:hover{background:var(--brand-2)}
   .actions{display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap}
   .pill{display:inline-block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#0f203f;color:#d7e7ff;margin:4px 6px 0 0;font-weight:600}
   .hint{font-size:12px;color:#9db3dc;margin-top:6px}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:8px}
-  .group{border:1px solid var(--line);border-radius:12px;padding:12px;background:#0f1422}
+  .layout{display:grid;grid-template-columns:430px 1fr;gap:14px;margin-top:10px}
+  @media (max-width:980px){ .layout{grid-template-columns:1fr} }
+
+  .group{border:1px solid var(--line);border-radius:12px;padding:12px;background:#0f1422;margin-bottom:12px}
   .group h2{font-size:15px;margin:0 0 8px;color:#a9d1ff}
   ul{list-style:none;margin:0;padding:0}
   li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
   li:last-child{border-bottom:0}
   a{color:#9dc9ff;text-decoration:none}
   a:hover{text-decoration:underline}
+
+  .viewer{border:1px solid var(--line);border-radius:12px;background:#0f1422}
+  .viewer-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--soft)}
+  .viewer-url{color:#9db9e2;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%}
+  .viewer-ctrls{display:flex;gap:8px}
+  .viewer-ctrls button{padding:8px 10px;font-size:12px}
+  iframe#visor{width:100%;height:72vh;border:0;border-bottom-left-radius:12px;border-bottom-right-radius:12px;background:#0b0f1a}
+
+  .preview{border:1px dashed var(--line);border-radius:12px;padding:10px;background:#0f1422;max-height:320px;overflow:auto;margin-top:10px}
+  .pv-item{padding:8px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .pv-item:last-child{border-bottom:0}
+  .pv-title{color:#cfe3ff;font-weight:700;margin-bottom:4px}
+  .pv-url{color:#9db9e2;font-size:12px;margin-bottom:4px;word-break:break-all}
+  .pv-snippet{color:#c7d6ef;font-size:13px}
 
   .footer{margin-top:12px;text-align:center;color:#97acd6;font-size:12px}
 </style>
@@ -66,11 +74,11 @@
   </header>
 
   <div class="card">
-    <p class="sub">Insira o <strong>CPF</strong> da pessoa (ou cole um CPF encontrado na investigação). O painel gera <strong>consultas diretas</strong>, <strong>dorks do Google</strong> e <strong>atalhos de recuperação de cadastro</strong> que, conforme o caso, expõem parte do telefone vinculado (ex.: <code>(67) 9**-3255**</code>).</p>
+    <p class="sub"><strong>Insira o CPF, NOME COMPLETO ou E-MAIL.</strong> O painel gera consultas diretas e atalhos de recuperação de cadastro que, conforme o caso, expõem parte do telefone vinculado ao CPF (ex.: <code>(67) 9**-3255**</code>).</p>
 
     <form onsubmit="return gerar()">
-      <input type="text" id="cpf" inputmode="numeric" autocomplete="off"
-             placeholder="CPF (ex.: 123.456.789-09)" oninput="maskCPF(this)" />
+      <input type="text" id="q" autocomplete="off"
+             placeholder="Ex.: 123.456.789-09  |  Maria da Silva  |  maria@email.com" />
       <button type="submit">Analisar</button>
     </form>
 
@@ -83,45 +91,71 @@
       <button type="button" onclick="exportXLSX()">Exportar XLSX</button>
     </div>
 
-    <div class="grid" id="results"></div>
+    <div class="layout">
+      <div>
+        <div id="lists"></div>
+        <div class="preview" id="preview" style="display:none"></div>
+      </div>
+
+      <div class="viewer">
+        <div class="viewer-head">
+          <div class="viewer-url" id="viewerUrl">Nenhum conteúdo carregado</div>
+          <div class="viewer-ctrls">
+            <button type="button" onclick="openInNewTab()">Abrir em nova aba</button>
+            <button type="button" onclick="toggleReader()">Alternar leitura</button>
+          </div>
+        </div>
+        <iframe id="visor" sandbox="allow-scripts allow-forms allow-same-origin allow-popups" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
   </div>
 
-  <div class="footer">IAPol® · uso responsável (LGPD/leis vigentes). Respeite ToS/termos de cada plataforma.</div>
+  <div class="footer">IAPol® · uso responsável (LGPD/leis vigentes) · Respeite os Termos de Uso de cada plataforma.</div>
 </div>
 
 <script>
-/* ================= CPF: máscara/validação ================= */
+/* ===================== Detectores/validações ===================== */
 function onlyDigits(s){ return (s||"").replace(/\D+/g,""); }
-function maskCPF(inp){
-  const d = onlyDigits(inp.value).slice(0,11);
-  let f = d;
-  if(d.length>3 && d.length<=6) f = d.slice(0,3)+"."+d.slice(3);
-  else if(d.length>6 && d.length<=9) f = d.slice(0,3)+"."+d.slice(3,6)+"."+d.slice(6);
-  else if(d.length>9) f = d.slice(0,3)+"."+d.slice(3,6)+"."+d.slice(6,9)+"-"+d.slice(9,11);
-  inp.value = f;
+function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim()); }
+
+/* CPF: máscara opcional (aplicada só quando claramente é CPF) */
+function maskCPF(s){
+  const d = onlyDigits(s).slice(0,11);
+  if(d.length<=3) return d;
+  if(d.length<=6) return d.slice(0,3)+"."+d.slice(3);
+  if(d.length<=9) return d.slice(0,3)+"."+d.slice(3,6)+"."+d.slice(6);
+  return d.slice(0,3)+"."+d.slice(3,6)+"."+d.slice(6,9)+"-"+d.slice(9,11);
 }
-function validaCPF(cpf){
-  const s = onlyDigits(cpf);
-  if(s.length!==11 || /^(\d)\1{10}$/.test(s)) return false;
-  const calc = (base) => {
-    let sum=0, fac=base+1;
-    for(let i=0;i<base;i++) sum += parseInt(s[i],10)*(fac-i);
-    const r = (sum*10)%11;
-    return (r===10?0:r);
-  };
-  if(calc(9)!==parseInt(s[9],10)) return false;
-  if(calc(10)!==parseInt(s[10],10)) return false;
-  return true;
+function validaCPFnum(num11){
+  if(num11.length!==11 || /^(\d)\1{10}$/.test(num11)) return false;
+  const calc=(b)=>{let s=0,f=b+1;for(let i=0;i<b;i++)s+=parseInt(num11[i],10)*(f-i);const r=(s*10)%11;return r===10?0:r;};
+  return calc(9)===parseInt(num11[9],10) && calc(10)===parseInt(num11[10],10);
 }
-function ensureCPF(){
-  const input = document.getElementById("cpf");
-  const ok = validaCPF(input.value);
-  input.classList.toggle("invalid", !ok);
-  return ok ? { raw: onlyDigits(input.value), fmt: input.value } : null;
+function detectType(q){
+  const t = q.trim();
+  const digits = onlyDigits(t);
+  if(isEmail(t)) return {type:"email", value:t};
+  if(digits.length===11 && validaCPFnum(digits)) return {type:"cpf", value:maskCPF(digits)};
+  // nome completo (heurística: tem espaço e >= 2 palavras)
+  if(/\s/.test(t) && t.replace(/\s+/g,' ').trim().split(' ').length>=2) return {type:"nome", value:t.replace(/\s+/g,' ').trim()};
+  // fallback: trata como nome mesmo de uma palavra
+  return {type:"nome", value:t};
 }
 
-/* ======= Catálogo de plataformas p/ “esqueci minha senha” ======= */
-/* (abrirá a tela de recuperação; o investigador informa o CPF no formulário da própria plataforma) */
+/* ===================== Reader / Visor ===================== */
+const reader = url => `https://r.jina.ai/http/${url.replace(/^https?:\/\//,'')}`;
+function setViewer(url,{forceReader=false}={}){
+  const frame = document.getElementById("visor");
+  const vurl  = document.getElementById("viewerUrl");
+  const u = forceReader ? reader(url) : url;
+  frame.src = u; vurl.textContent = u;
+  window.__viewer_current = url; window.__viewer_reader = forceReader;
+}
+function toggleReader(){ if(!window.__viewer_current) return; setViewer(window.__viewer_current,{forceReader:!window.__viewer_reader}); }
+function openInNewTab(){ if(!window.__viewer_current) return; const u=window.__viewer_reader?reader(window.__viewer_current):window.__viewer_current; window.open(u,"_blank"); }
+
+/* ===================== Fontes (por tipo) ===================== */
+/* Plataformas de recuperação: muitas exibem telefone/e-mail mascarados */
 const RESET_PLATFORMS = [
   ["OLX", "https://www.olx.com.br/ajuda/conta/recuperar-senha"],
   ["99 (app)", "https://passageiro.99app.com/forgot-password"],
@@ -133,111 +167,157 @@ const RESET_PLATFORMS = [
   ["Submarino", "https://www.submarino.com.br/senha/recuperar"]
 ];
 
-/* ================= GRUPOS (com base no texto de referência) ================= */
-const GRUPOS = [
-  ["Consultas diretas", [
-    ["Mind-7 (dados públicos)", "https://mind-7.org/"],
-    ["CNPJ.biz — se o CPF for MEI", "https://cnpj.biz/"],
-    ["Epieos — se tiver e-mail (OSINT e-mail)", "https://epieos.com/"]
-  ]],
-  ["Google Dorks (por CPF)", [
-    // Dorks do texto (e variações úteis)
-    ["PDF com telefone", "https://www.google.com/search?q=%22%CPF_FMT%%22+telefone+filetype:pdf"],
-    ["site:cnpj.biz (MEI)", "https://www.google.com/search?q=%22%CPF_FMT%%22+site:cnpj.biz"],
-    ["Planilhas XLS", "https://www.google.com/search?q=%22%CPF_FMT%%22+filetype:xls"],
-    ["XLS com telefone (exclui gov.br/brasil)", "https://www.google.com/search?q=filetype:xls+%22%CPF_FMT%%22+telefone+-gov+-brasil"],
-    // variações adicionais
-    ["CSV/XLSX/PDF (amplo)", "https://www.google.com/search?q=%22%CPF_FMT%%22+(filetype:csv+OR+filetype:xlsx+OR+filetype:pdf)"],
-    ["Diários/Transparência", "https://www.google.com/search?q=site:in.gov.br+OR+site:transparencia.*+%22%CPF_FMT%%22+telefone"],
-    ["Portais *.jus.br", "https://www.google.com/search?q=site:*.jus.br+%22%CPF_FMT%%22+telefone"],
-    ["Sindicato/Associação", "https://www.google.com/search?q=%22%CPF_FMT%%22+(sindicato+OR+associados+OR+editais)+telefone"]
-  ]],
-  ["Recuperação de cadastro (pode exibir partes do telefone)", []], // será preenchido via RESET_PLATFORMS
-  ["Outros motores", [
-    ["Bing (amplo)", "https://www.bing.com/search?q=%22%CPF_FMT%%22+telefone"],
-    ["DuckDuckGo (amplo)", "https://duckduckgo.com/?q=%22%CPF_FMT%%22+telefone"]
-  ]]
-];
-
-/* Insere dinamicamente as plataformas de reset */
-RESET_PLATFORMS.forEach(([nome,url])=>{
-  GRUPOS[2][1].push([`${nome} — “esqueci minha senha”`, url]);
-});
-
-/* ================= Renderização ================= */
-function buildUrl(tpl, cpfFmt, cpfRaw){
-  return tpl.replaceAll("%CPF_FMT%", encodeURIComponent(cpfFmt))
-            .replaceAll("%CPF_RAW%", encodeURIComponent(cpfRaw));
+/* Templates para cada tipo de entrada */
+function sourcesForCPF(cpf){
+  const cpfEnc = encodeURIComponent(cpf);
+  return [
+    ["Consultas diretas (CPF)", [
+      ["Mind-7 (dados públicos)", "https://mind-7.org/"],
+      ["CNPJ.biz — se for MEI", "https://cnpj.biz/"]
+    ]],
+    ["Google Dorks (CPF → telefone)", [
+      ["PDF com telefone", `https://www.google.com/search?q=%22${cpfEnc}%22+telefone+filetype:pdf`],
+      ["site:cnpj.biz (MEI)", `https://www.google.com/search?q=%22${cpfEnc}%22+site:cnpj.biz`],
+      ["Planilhas XLS", `https://www.google.com/search?q=%22${cpfEnc}%22+filetype:xls`],
+      ["XLS com telefone (exclui gov/brasil)", `https://www.google.com/search?q=filetype:xls+%22${cpfEnc}%22+telefone+-gov+-brasil`],
+      ["CSV/XLSX/PDF (amplo)", `https://www.google.com/search?q=%22${cpfEnc}%22+(filetype:csv+OR+filetype:xlsx+OR+filetype:pdf)`],
+      ["Diários/Transparência", `https://www.google.com/search?q=site:in.gov.br+OR+site:transparencia.*+%22${cpfEnc}%22+telefone`],
+      ["Portais *.jus.br", `https://www.google.com/search?q=site:*.jus.br+%22${cpfEnc}%22+telefone`]
+    ]],
+    ["Recuperação de cadastro (informe o CPF)", RESET_PLATFORMS.map(([n,u])=>[`${n} — “esqueci minha senha”`, u])]
+  ];
 }
-function montar(cpfFmt, cpfRaw){
-  const fmtBox = document.getElementById("fmtBox");
-  const box = document.getElementById("results");
-  const bar = document.getElementById("exportBar");
-  box.innerHTML = "";
+function sourcesForEmail(email){
+  const e = encodeURIComponent(email);
+  return [
+    ["Consultas diretas (e-mail)", [
+      ["Epieos (OSINT e-mail)", "https://epieos.com/"],
+      ["Google: e-mail + telefone", `https://www.google.com/search?q=%22${e}%22+telefone+OR+whatsapp`],
+      ["Bing: e-mail + telefone", `https://www.bing.com/search?q=%22${e}%22+telefone+OR+whatsapp`],
+      ["DuckDuckGo", `https://duckduckgo.com/?q=%22${e}%22+telefone+OR+whatsapp`]
+    ]],
+    ["Redes/Perfis (por e-mail)", [
+      ["LinkedIn (login reset)", "https://www.linkedin.com/checkpoint/rp/request-password-reset"],
+      ["Facebook (login help)", "https://www.facebook.com/login/identify"],
+      ["Twitter/X (reset)", "https://x.com/account/begin_password_reset"]
+    ]],
+    ["Recuperação de cadastro (informe o e-mail)", RESET_PLATFORMS.map(([n,u])=>[`${n} — “esqueci minha senha”`, u])]
+  ];
+}
+function sourcesForNome(nome){
+  const q = encodeURIComponent(`"${nome}"`);
+  return [
+    ["Motores (nome → telefone)", [
+      ["Google (geral)", `https://www.google.com/search?q=${q}+telefone+OR+whatsapp+contato`],
+      ["Bing", `https://www.bing.com/search?q=${q}+telefone+OR+whatsapp+contato`],
+      ["DuckDuckGo", `https://duckduckgo.com/?q=${q}+telefone+OR+whatsapp+contato`]
+    ]],
+    ["Documentos/Registros", [
+      ["PDF", `https://www.google.com/search?q=${q}+telefone+filetype:pdf`],
+      ["XLS/XLSX", `https://www.google.com/search?q=${q}+telefone+(filetype:xls+OR+filetype:xlsx)`],
+      ["Editais/Diários", `https://www.google.com/search?q=${q}+(edital+OR+di%C3%A1rio+oficial)+telefone`]
+    ]],
+    ["Perfis/Redes", [
+      ["Facebook — Google", `https://www.google.com/search?q=site:facebook.com+${q}+telefone`],
+      ["Instagram — Google", `https://www.google.com/search?q=site:instagram.com+${q}+telefone`],
+      ["LinkedIn — Google", `https://www.google.com/search?q=site:linkedin.com+${q}+telefone`],
+      ["X (Twitter) — Google", `https://www.google.com/search?q=site:x.com+${q}+telefone`]
+    ]]
+  ];
+}
 
-  fmtBox.innerHTML = `<span class="pill">CPF: ${cpfFmt}</span><span class="pill">RAW: ${cpfRaw}</span>`;
-  fmtBox.style.display = "block";
-
-  GRUPOS.forEach(([titulo,itens])=>{
+/* ===================== Montagem / UI ===================== */
+function buildLists(groups){
+  const lists = document.getElementById("lists");
+  lists.innerHTML = "";
+  groups.forEach(([titulo, itens])=>{
     const div = document.createElement("div");
     div.className = "group";
     const h2  = document.createElement("h2"); h2.textContent = titulo;
     const ul  = document.createElement("ul");
-
-    itens.forEach(([label,tpl])=>{
+    itens.forEach(([label,url])=>{
       const li = document.createElement("li");
       const a  = document.createElement("a");
-      a.textContent = label; a.target = "_blank"; a.rel = "noopener";
-      a.href = buildUrl(tpl, cpfFmt, cpfRaw);
+      a.textContent = label; a.href="#";
+      a.onclick = (ev)=>{ ev.preventDefault(); openDirectory(label,url); };
       li.appendChild(a); ul.appendChild(li);
     });
-
-    div.appendChild(h2); div.appendChild(ul); box.appendChild(div);
+    div.appendChild(h2); div.appendChild(ul); lists.appendChild(div);
   });
-
-  bar.style.display = "flex";
 }
 
-/* ================= Exportações ================= */
-function buildRows(cpfFmt, cpfRaw){
+async function openDirectory(title, url){
+  setViewer(url,{forceReader:true});
+  const pv = document.getElementById("preview");
+  pv.style.display="block";
+  pv.innerHTML = `<div class="pv-item"><div class="pv-title">Carregando prévia de ${title}…</div></div>`;
+  try{
+    const resp = await fetch(reader(url), {mode:"cors"});
+    if(!resp.ok) throw new Error(resp.statusText);
+    const txt = await resp.text();
+    const lines = txt.split("\n").filter(Boolean);
+    const blocks=[]; let acc=[];
+    for(const l of lines){
+      if((/^#|^##|\d+\.\s|•\s/).test(l) && acc.length){ blocks.push(acc.join(" ")); acc=[l]; }
+      else acc.push(l);
+      if(blocks.length>=10) break;
+    }
+    if(acc.length && blocks.length<10) blocks.push(acc.join(" "));
+    pv.innerHTML = blocks.slice(0,8).map((b,i)=>`
+      <div class="pv-item">
+        <div class="pv-title">${title} — item ${i+1}</div>
+        <div class="pv-url">${url}</div>
+        <div class="pv-snippet">${b.replace(/\s+/g," ").slice(0,320)}…</div>
+        <div style="margin-top:6px">
+          <button type="button" onclick="setViewer('${url.replace(/'/g,"\\'")}',{forceReader:false})">Abrir página original</button>
+          <button type="button" onclick="setViewer('${url.replace(/'/g,"\\'")}',{forceReader:true})">Abrir em leitura</button>
+        </div>
+      </div>`).join("") || `<div class="pv-item"><div class="pv-title">${title}</div><div class="pv-snippet">Prévia indisponível.</div></div>`;
+  }catch(e){
+    pv.innerHTML = `<div class="pv-item"><div class="pv-title">${title}</div><div class="pv-snippet">Não foi possível obter a prévia agora.</div></div>`;
+  }
+}
+
+/* ===================== Exportações ===================== */
+function flatten(groups){
   const rows=[];
-  GRUPOS.forEach(([grupo,itens])=>{
-    itens.forEach(([fonte,tpl])=>{
-      rows.push({CPF: cpfFmt, RAW: cpfRaw, GRUPO: grupo, FONTE: fonte, URL: buildUrl(tpl,cpfFmt,cpfRaw)});
+  groups.forEach(([grupo,itens])=>{
+    itens.forEach(([fonte,url])=>{
+      rows.push({GRUPO:grupo, FONTE:fonte, URL:url});
     });
   });
   return rows;
 }
 function exportCSV(){
-  const st = window.__cpf_state; if(!st){ alert("Faça a análise primeiro."); return; }
-  const rows = buildRows(st.cpfFmt, st.cpfRaw);
-  let csv = "CPF;RAW;GRUPO;FONTE;URL\n";
-  rows.forEach(r=>{ csv += `"${r.CPF}";"${r.RAW}";"${r.GRUPO.replace(/"/g,'""')}";"${r.FONTE.replace(/"/g,'""')}";"${r.URL.replace(/"/g,'""')}"\n`; });
+  const st = window.__query_state; if(!st){ alert("Faça a análise primeiro."); return; }
+  const rows = flatten(st.groups);
+  let csv = "TIPO;CONSULTA;GRUPO;FONTE;URL\n";
+  rows.forEach(r=>{ csv += `"${st.type}";"${st.value.replace(/"/g,'""')}";"${r.GRUPO.replace(/"/g,'""')}";"${r.FONTE.replace(/"/g,'""')}";"${r.URL.replace(/"/g,'""')}"\n`; });
   const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download=`IAPol_DescTelefone_por_CPF_${st.cpfRaw}.csv`; a.click();
+  a.download=`IAPol_Analise_Telefone_${st.type}.csv`; a.click();
 }
 function exportTXT(){
-  const st = window.__cpf_state; if(!st){ alert("Faça a análise primeiro."); return; }
-  const rows = buildRows(st.cpfFmt, st.cpfRaw);
-  let txt = `IAPol® — Descoberta de Telefone por CPF\nCPF: ${st.cpfFmt} (raw: ${st.cpfRaw})\nData: ${new Date().toLocaleString("pt-BR")}\n\n`;
+  const st = window.__query_state; if(!st){ alert("Faça a análise primeiro."); return; }
+  const rows = flatten(st.groups);
+  let txt = `IAPol® — Análise de Telefone\nTipo: ${st.type}\nConsulta: ${st.value}\nData: ${new Date().toLocaleString("pt-BR")}\n\n`;
   rows.forEach(r=>{ txt += `- [${r.GRUPO}] ${r.FONTE}: ${r.URL}\n`; });
   const blob = new Blob([txt], {type:"text/plain;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download=`IAPol_DescTelefone_por_CPF_${st.cpfRaw}.txt`; a.click();
+  a.download=`IAPol_Analise_Telefone_${st.type}.txt`; a.click();
 }
 function exportPDF(){
-  const st = window.__cpf_state; if(!st){ alert("Faça a análise primeiro."); return; }
+  const st = window.__query_state; if(!st){ alert("Faça a análise primeiro."); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:"pt", format:"a4" });
   const m=48; let y=m;
   doc.setFont("helvetica","bold"); doc.setFontSize(16);
-  doc.text("IAPol® — Descoberta de Telefone por CPF", m, y); y+=18;
+  doc.text("IAPol® — Análise de Telefone", m, y); y+=18;
   doc.setFont("helvetica","normal"); doc.setFontSize(12);
-  doc.text(`CPF: ${st.cpfFmt} (raw: ${st.cpfRaw})`, m, y); y+=8;
+  doc.text(`Tipo: ${st.type} — Consulta: ${st.value}`, m, y); y+=8;
   doc.text(`Data: ${new Date().toLocaleString("pt-BR")}`, m, y); y+=18;
 
-  const rows = buildRows(st.cpfFmt, st.cpfRaw);
+  const rows = flatten(st.groups);
   doc.setFontSize(11);
   let gAtual = "";
   rows.forEach(r=>{
@@ -254,35 +334,54 @@ function exportPDF(){
   if(y>800){ doc.addPage(); y=m; }
   doc.setDrawColor(160); doc.line(m,820,595-m,820);
   doc.setFontSize(9); doc.setTextColor(120);
-  doc.text("Observação: plataformas de recuperação podem exibir parte do telefone vinculado ao CPF. Respeite LGPD/ToS.", m, 838);
-  doc.save(`IAPol_DescTelefone_por_CPF_${st.cpfRaw}.pdf`);
+  doc.text("Observação: alguns portais mostram telefone/e-mail mascarados no fluxo de recuperação. Respeite LGPD/ToS.", m, 838);
+  doc.save(`IAPol_Analise_Telefone_${st.type}.pdf`);
 }
 function exportXLSX(){
-  const st = window.__cpf_state; if(!st){ alert("Faça a análise primeiro."); return; }
-  const rows = buildRows(st.cpfFmt, st.cpfRaw);
-  const ws = XLSX.utils.json_to_sheet(rows);
+  const st = window.__query_state; if(!st){ alert("Faça a análise primeiro."); return; }
+  const rows = flatten(st.groups);
+  const ws = XLSX.utils.json_to_sheet(rows.map(r=>({TIPO:st.type, CONSULTA:st.value, GRUPO:r.GRUPO, FONTE:r.FONTE, URL:r.URL})));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Telefone_por_CPF");
-  XLSX.writeFile(wb, `IAPol_DescTelefone_por_CPF_${st.cpfRaw}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, "AnaliseTelefone");
+  XLSX.writeFile(wb, `IAPol_Analise_Telefone_${st.type}.xlsx`);
 }
 
-/* ================= Fluxo ================= */
+/* ===================== Fluxo principal ===================== */
 function gerar(){
-  const st = ensureCPF();
-  if(!st){ alert("CPF inválido."); return false; }
-  window.__cpf_state = { cpfRaw: st.raw, cpfFmt: st.fmt };
-  history.replaceState({}, "", location.pathname + "?cpf=" + encodeURIComponent(st.fmt));
-  montar(st.fmt, st.raw);
+  const qEl = document.getElementById("q");
+  const raw = qEl.value.trim();
+  if(!raw){ alert("Informe CPF, nome completo ou e-mail."); return false; }
+
+  const det = detectType(raw);
+  let groups;
+  if(det.type==="cpf"){
+    groups = sourcesForCPF(det.value);
+  }else if(det.type==="email"){
+    groups = sourcesForEmail(det.value);
+  }else{
+    groups = sourcesForNome(det.value);
+  }
+
+  // UI
+  window.__query_state = { type: det.type, value: det.value, groups };
+  document.getElementById("exportBar").style.display = "flex";
+  document.getElementById("fmtBox").innerHTML =
+    `<span class="pill">Tipo: ${det.type.toUpperCase()}</span><span class="pill">Consulta: ${det.value}</span>`;
+  document.getElementById("fmtBox").style.display = "block";
+  buildLists(groups);
+
+  // limpar visor/preview
+  document.getElementById("preview").style.display="none";
+  setViewer("about:blank");
+  history.replaceState({}, "", location.pathname + "?q=" + encodeURIComponent(det.value));
   return false;
 }
+
+/* Suporte a ?q= */
 (function init(){
   const p = new URLSearchParams(location.search);
-  const q = p.get("cpf");
-  if(q){
-    document.getElementById("cpf").value = q;
-    const st = ensureCPF();
-    if(st){ window.__cpf_state = { cpfRaw: st.raw, cpfFmt: st.fmt }; montar(st.fmt, st.raw); }
-  }
+  const q = p.get("q");
+  if(q){ document.getElementById("q").value = q; gerar(); }
 })();
 </script>
 </body>
