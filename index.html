@@ -1,413 +1,289 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Análise de Telefone | IAPol® – Coleta OSINT + Proxy</title>
-<meta name="description" content="Busca e extração OSINT de telefones associados a um CPF, com ranqueamento de evidências, auto-detecção de ambiente e proxy Cloudflare Worker.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='100%25' height='100%25' rx='12' ry='12' fill='%230a2540'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='34' fill='%23ffffff'%3EIA%3C/text%3E%3C/svg%3E">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Análise de Telefone · IAPol®</title>
+<link rel="icon" type="image/png" href="./favicon.png">
+<meta name="robots" content="noindex,nofollow" />
 <style>
-:root{--bg:#0b1020;--panel:#11162b;--muted:#9fb3c8;--text:#e9eef5;--blue:#1e90ff;--accent:#3aa0ff;--ok:#19c37d;--warn:#ffbf00;--danger:#ff5d5d;--card:#0f1427;--border:#23304a;--shadow:0 12px 30px rgba(0,0,0,.35);--radius:18px}
-*{box-sizing:border-box}html,body{height:100%}
-body{margin:0;background:radial-gradient(1200px 800px at 80% -10%, rgba(30,144,255,.12), transparent 60%),radial-gradient(1000px 600px at -10% 20%, rgba(58,160,255,.10), transparent 55%),var(--bg);color:var(--text);font:16px/1.5 "Inter",-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-.wrap{max-width:1180px;margin:0 auto;padding:0 18px}
-header{padding:28px 18px 10px}.brand{display:flex;align-items:center;gap:14px}
-.logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(145deg,#0a2540,#0e2b56);display:grid;place-items:center;box-shadow:var(--shadow);border:1px solid var(--border)}
-.logo span{font-weight:800;color:#fff}
-h1{margin:0;font-size:28px}.subtitle{margin:6px 0 0;color:var(--muted)}
-.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
-.card h3{margin:0;padding:18px 18px 0;font-size:18px}.card .body{padding:18px}
-.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
-label{display:block;font-weight:600;margin:10px 0 6px}
-input[type="text"],input[type="email"],input[type="url"]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0a1022;color:var(--text);outline:none}
-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,144,255,.18)}
-.btn{padding:11px 14px;border-radius:12px;border:1px solid var(--border);cursor:pointer;background:linear-gradient(180deg,#142042,#0f1733);color:#fff;font-weight:600;box-shadow:var(--shadow);transition:.15s}
-.btn:hover{transform:translateY(-1px);border-color:var(--accent)}
-.btn.primary{background:linear-gradient(180deg,#1f6fe0,#1352c4);border-color:#1e5ed1}
-.btn.ok{background:linear-gradient(180deg,#22c985,#18a56b);border-color:#18a56b}
-.btn.ghost{background:transparent}
-.switch{display:flex;align-items:center;gap:8px;color:var(--muted);margin-top:6px}
-.switch input{transform:scale(1.1)}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#0f2140;color:#b7d7ff;border:1px solid #254a7a;font-size:12px;font-weight:700}
-.kbd{font-family:ui-monospace,Menlo,Consolas,monospace;padding:2px 6px;border:1px solid var(--border);border-radius:6px;background:#0a1022}
-.small{font-size:13px;color:var(--muted)}
-hr.sep{border:none;border-top:1px dashed var(--border);margin:14px 0}
-.table{width:100%;border-collapse:collapse}
-.table th,.table td{border-bottom:1px dashed var(--border);padding:8px 6px;text-align:left;vertical-align:top}
-.table th{color:#cfe3ff}
-.note{background:#0a1022;border:1px solid var(--border);border-radius:12px;padding:12px}
-.status{display:flex;gap:10px;flex-wrap:wrap}
-.pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--border);border-radius:12px;padding:8px 10px;background:#0a1022}
-.conf-1{color:#ff9b6a}.conf-2{color:#ffd56a}.conf-3{color:#a4ff9e}
-@media (max-width:980px){.grid{grid-template-columns:1fr}}
+  :root{
+    --bg:#0a0f1a; --card:#0f1422; --line:#1e4d92;
+    --brand:#1677ff; --brand-2:#0b5ed7;
+    --text:#eaf2ff; --muted:#a9c0e6;
+  }
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);margin:0}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px}
+
+  header{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand img{width:54px;height:54px;object-fit:contain;border-radius:50%}
+  .brand h1{font-size:32px;margin:0;color:#d8e8ff;line-height:1.1}
+  .brand .badge{
+    margin-top:6px;display:inline-block;padding:6px 14px;border-radius:999px;
+    background:#0f203f;border:1px solid var(--line);color:#dbeaff;
+    font-weight:700;font-size:12px;letter-spacing:.3px
+  }
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.28);padding:20px}
+  .sub{color:var(--muted);margin:6px 0 12px}
+  form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  input[type=text]{flex:1;min-width:280px;padding:12px 14px;border-radius:12px;border:1px solid #1b3b6f;background:#0f1422;color:#f0f6ff}
+  input.invalid{border-color:#e5534b;outline-color:#e5534b}
+  button{padding:12px 16px;border-radius:12px;border:0;background:var(--brand);color:#fff;font-weight:700;cursor:pointer}
+  button:hover{background:var(--brand-2)}
+  .actions{display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap}
+  .pill{display:inline-block;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#0f203f;color:#d7e7ff;margin:4px 6px 0 0;font-weight:600}
+  .hint{font-size:12px;color:#9db3dc;margin-top:6px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:8px}
+  .group{border:1px solid var(--line);border-radius:12px;padding:12px;background:#0f1422}
+  .group h2{font-size:15px;margin:0 0 8px;color:#a9d1ff}
+  ul{list-style:none;margin:0;padding:0}
+  li{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  li:last-child{border-bottom:0}
+  a{color:#9dc9ff;text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  .footer{margin-top:12px;text-align:center;color:#97acd6;font-size:12px}
 </style>
+
+<!-- jsPDF e SheetJS -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<header class="wrap">
-  <div class="brand">
-    <div class="logo"><span>IAPol®</span></div>
-    <div>
-      <h1>Análise de Telefone</h1>
-      <p class="subtitle">Coleta automática + ranqueamento de evidências (ambiente auto-detectado)</p>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <img src="./iapol-logo.png" alt="IAPol®" onerror="this.style.display='none'">
+      <div>
+        <h1>Análise de Telefone</h1>
+        <div class="badge">IAPol® | Inteligência Artificial Policial</div>
+      </div>
     </div>
+  </header>
+
+  <div class="card">
+    <p class="sub">Insira o <strong>CPF</strong> da pessoa (ou cole um CPF encontrado na investigação). O painel gera <strong>consultas diretas</strong>, <strong>dorks do Google</strong> e <strong>atalhos de recuperação de cadastro</strong> que, conforme o caso, expõem parte do telefone vinculado (ex.: <code>(67) 9**-3255**</code>).</p>
+
+    <form onsubmit="return gerar()">
+      <input type="text" id="cpf" inputmode="numeric" autocomplete="off"
+             placeholder="CPF (ex.: 123.456.789-09)" oninput="maskCPF(this)" />
+      <button type="submit">Analisar</button>
+    </form>
+
+    <div id="fmtBox" class="hint" style="display:none"></div>
+
+    <div class="actions" id="exportBar" style="display:none">
+      <button type="button" onclick="exportCSV()">Exportar CSV</button>
+      <button type="button" onclick="exportPDF()">Exportar PDF</button>
+      <button type="button" onclick="exportTXT()">Exportar TXT</button>
+      <button type="button" onclick="exportXLSX()">Exportar XLSX</button>
+    </div>
+
+    <div class="grid" id="results"></div>
   </div>
-</header>
 
-<main class="wrap grid">
-  <!-- COLUNA ESQUERDA -->
-  <section class="card">
-    <h3>Parâmetros da investigação (OSINT lícito)</h3>
-    <div class="body">
-      <div class="row">
-        <div style="flex:1 1 260px">
-          <label for="cpf">CPF (apenas números)</label>
-          <input id="cpf" type="text" inputmode="numeric" maxlength="14" placeholder="Ex.: 12345678900">
-          <div class="small">Formatado como <span class="kbd">123.456.789-00</span>.</div>
-        </div>
-        <div style="flex:1 1 260px">
-          <label for="email">E-mail (opcional)</label>
-          <input id="email" type="email" placeholder="Ex.: nome@dominio.com">
-          <div class="small">Para dorks e epieos.com (consulta aberta).</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div style="flex:1 1 260px">
-          <label for="proxy">URL do Proxy (opcional)</label>
-          <input id="proxy" type="url"
-                 value="https://iapol-proxy.delexxsolucoesenegocios.workers.dev"
-                 placeholder="auto (se detectado)">
-          <div class="small">Se vazio, tenta <span class="kbd">/api</span>, <span class="kbd">/worker</span> ou <span class="kbd">/edge</span> no mesmo domínio.</div>
-        </div>
-        <div style="flex:1 1 220px">
-          <label for="engine">Mecanismo</label>
-          <input id="engine" type="text" value="google" placeholder="ddg (padrão) ou google (requer proxy)">
-          <div class="small"><span class="kbd">google</span> usa o Worker; <span class="kbd">ddg</span> funciona também com fallback público.</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <label class="switch"><input id="q_pdfs" type="checkbox" checked>PDFs</label>
-        <label class="switch"><input id="q_sheets" type="checkbox" checked>Planilhas</label>
-        <label class="switch"><input id="q_docs" type="checkbox">Docs (doc/odt)</label>
-        <label class="switch"><input id="q_html" type="checkbox" checked>Páginas HTML</label>
-        <label class="switch"><input id="exclude_gov" type="checkbox">Excluir domínios gov*</label>
-        <label class="switch"><input id="near_only" type="checkbox" checked>Apenas telefones próximos ao CPF</label>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <button id="run" class="btn primary">Executar busca automática</button>
-        <button id="gen" class="btn">Gerar dorks</button>
-        <button id="openAll" class="btn">Abrir dorks</button>
-        <button id="expCSV" class="btn ok">Exportar CSV</button>
-        <button id="expJSON" class="btn ghost">Exportar JSON</button>
-      </div>
-
-      <hr class="sep">
-      <div class="note small">
-        <strong class="warn">Aviso legal:</strong> Consulta apenas a <strong>fontes públicas</strong>. Use com base legal (inquérito, ordem judicial, procedimento administrativo ou consentimento). Proibido uso para perseguição, doxing ou violação da LGPD.
-      </div>
-    </div>
-  </section>
-
-  <!-- COLUNA DIREITA -->
-  <section class="card">
-    <h3>Progresso & Resultados</h3>
-    <div class="body">
-      <div id="status" class="status small"></div>
-      <hr class="sep">
-      <h4 style="margin:0 0 8px">Consolidação de Telefones (candidatos)</h4>
-      <table class="table small" id="phones">
-        <thead><tr><th>Telefone</th><th>Confiança</th><th>Ocorrências</th><th>Fontes</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <hr class="sep">
-      <h4 style="margin:0 0 8px">Evidências por Fonte</h4>
-      <table class="table small" id="evidences">
-        <thead><tr><th>Fonte</th><th>Trecho (CPF ~ telefone)</th><th>Arquivamento</th><th>Abrir</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
-</main>
-
-<section class="wrap card" style="margin-top:18px">
-  <div class="body">
-    <h3>Dorks & Atalhos</h3>
-    <ul id="dorks" class="small" style="margin:0;padding-left:16px"></ul>
-  </div>
-</section>
-
-<footer class="wrap" style="padding:18px 0 40px">
-  <div class="small">© IAPol® — OSINT responsável. Proxy padrão ativo. Versão GitHub Pages/Cloudflare pronta.</div>
-</footer>
+  <div class="footer">IAPol® · uso responsável (LGPD/leis vigentes). Respeite ToS/termos de cada plataforma.</div>
+</div>
 
 <script>
-/* ===== Ambiente & utilitários ===== */
-const $ = (s)=>document.querySelector(s);
-const sleep = (ms)=>new Promise(r=>setTimeout(r, ms));
-const host = location.hostname;
-const ENV = host.endsWith("github.io") ? "github"
-          : (host.endsWith("pages.dev") || host.includes("cloudflare")) ? "cloudflare"
-          : "outro";
-const CONCURRENCY = ENV==="cloudflare" ? 8 : 5;
-const MAX_LINKS = 60;
-
-const status = (arr)=> $("#status").innerHTML = arr.map(x=>`<span class="pill">${x}</span>`).join(" ");
-const fmtCPF = (s)=>{ const n=(s||"").replace(/\D/g,"").slice(0,11);
-  if(n.length<=3) return n;
-  if(n.length<=6) return n.replace(/(\d{3})(\d+)/,"$1.$2");
-  if(n.length<=9) return n.replace(/(\d{3})(\d{3})(\d+)/,"$1.$2.$3");
-  return n.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,"$1.$2.$3-$4");
-};
-$("#cpf").addEventListener("input", e=> e.target.value = fmtCPF(e.target.value));
-const esc = (v)=>String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
-const enc = encodeURIComponent;
-const domainOf = (u)=>{ try{ return new URL(u).hostname.replace(/^www\./,""); }catch{ return ""; } };
-const fileTypeOf = (u)=>{ const m=(u.split("?")[0].match(/\.([a-z0-9]{2,5})$/i)||[])[1]; return (m||"html").toLowerCase(); };
-const withRetry = async (fn, tries=ENV==="cloudflare"?4:3)=>{ let last; for(let i=0;i<tries;i++){ try{ return await fn(); }catch(e){ last=e; await sleep(350*(i+1)); } } throw last; };
-
-/* ===== Auto-descoberta de proxy local ===== */
-const PROXY_CANDIDATES = [`${location.origin}/api`, `${location.origin}/worker`, `${location.origin}/edge`];
-let AUTO_PROXY = "";
-async function detectProxy(){
-  for(const base of PROXY_CANDIDATES){
-    try{
-      const r = await fetch(`${base}/health`, { cache:"no-store" });
-      if(r.ok){ AUTO_PROXY = base; break; }
-    }catch(_){}
-  }
-  if(AUTO_PROXY){
-    const p = document.querySelector("#proxy");
-    if(p && !p.value) p.placeholder = AUTO_PROXY + " (auto)";
-  }
+/* ================= CPF: máscara/validação ================= */
+function onlyDigits(s){ return (s||"").replace(/\D+/g,""); }
+function maskCPF(inp){
+  const d = onlyDigits(inp.value).slice(0,11);
+  let f = d;
+  if(d.length>3 && d.length<=6) f = d.slice(0,3)+"."+d.slice(3);
+  else if(d.length>6 && d.length<=9) f = d.slice(0,3)+"."+d.slice(3,6)+"."+d.slice(6);
+  else if(d.length>9) f = d.slice(0,3)+"."+d.slice(3,6)+"."+d.slice(6,9)+"-"+d.slice(9,11);
+  inp.value = f;
 }
-detectProxy();
-
-/* ===== Dorks ===== */
-function buildQueries(cpfMasked, email, opts){
-  const quotedCPF = `"${cpfMasked}"`;
-  const negGov = opts.excludeGov ? ' -site:gov.br -site:*.gov.br -"gov.br" -gov -brasil' : '';
-  const tel = ' telefone OR "telefone" OR celular OR "celular" ';
-  const w = (x)=>x.trim().replace(/\s+/g," ").trim();
-
-  const q = [];
-  if(opts.pdfs) q.push(w(`${quotedCPF} ${tel} filetype:pdf ${negGov}`));
-  if(opts.sheets) q.push(w(`${quotedCPF} ${tel} (filetype:xls OR filetype:xlsx OR filetype:csv) ${negGov}`));
-  if(opts.docs) q.push(w(`${quotedCPF} ${tel} (filetype:doc OR filetype:docx OR filetype:odt) ${negGov}`));
-  if(opts.html) q.push(w(`${quotedCPF} ${tel} (lista OR edital OR sindicato OR associado OR "cadastro" OR "reclamação") ${negGov}`));
-  q.push(w(`${quotedCPF} site:cnpj.biz ${negGov}`));
-  if(email){
-    if(opts.pdfs) q.push(w(`"${email}" filetype:pdf ${negGov}`));
-    if(opts.sheets) q.push(w(`"${email}" (filetype:xls OR filetype:xlsx OR filetype:csv) ${negGov}`));
-  }
-  return q;
-}
-function renderDorks(list){
-  const ul=$("#dorks");
-  ul.innerHTML = list.map(q=>`<li><span class="badge">Google</span> <code class="small" style="color:#cfe3ff">${esc(q)}</code> &nbsp; <a class="btn ghost" target="_blank" rel="noopener" href="https://www.google.com/search?q=${enc(q)}">Abrir</a></li>`).join("");
-}
-
-/* ===== Fetchers ===== */
-async function fetchSearch({ q, engine, proxy }){
-  if(proxy){
-    const url = `${proxy.replace(/\/$/,'')}/search?q=${enc(q)}&engine=${enc(engine||'ddg')}`;
-    const r = await withRetry(()=>fetch(url, { headers:{ 'Accept':'application/json' }, cache:"no-store" }));
-    if(!r.ok) throw new Error("Proxy search falhou");
-    const j = await r.json();
-    return j.results || [];
-  } else {
-    // Fallback: DDG via r.jina.ai (modo leitura)
-    const ddg = `http://duckduckgo.com/html/?q=${enc(q)}&ia=web`;
-    const r = await withRetry(()=>fetch(`https://r.jina.ai/${ddg}`, { cache:"no-store" }));
-    if(!r.ok) return [];
-    const text = await r.text();
-    const urls = Array.from(new Set(Array.from(text.matchAll(/https?:\/\/[^\s)]+/g)).map(m=>m[0])))
-      .filter(u=>!u.includes("duckduckgo.com") && !u.includes("r.jina.ai/https"));
-    return urls.slice(0,15).map(u=>({ title: u, link: u, snippet:"" }));
-  }
-}
-async function fetchPageText(url, proxy){
-  if(proxy){
-    const r = await withRetry(()=>fetch(`${proxy.replace(/\/$/,'')}/get?url=${enc(url)}`, { cache:"no-store" }));
-    if(!r.ok) throw new Error("Proxy get falhou");
-    return await r.text();
-  } else {
-    const u = url.startsWith("http") ? url : `http://${url}`;
-    const r = await withRetry(()=>fetch(`https://r.jina.ai/${u}`, { cache:"no-store" }));
-    if(!r.ok) throw new Error("fallback falhou");
-    return await r.text();
-  }
-}
-
-/* ===== Extração ===== */
-function buildCpfVariants(cpfMasked){
-  const digits = cpfMasked.replace(/\D/g,"");
-  const v = new Set([cpfMasked, digits, cpfMasked.replace(/[.]/g," "), cpfMasked.replace(/[.-]/g,"")]);
-  return Array.from(v);
-}
-function extractPhones(text){
-  // Telefones BR: +55 opcional, DDD (2), celular com 9 opcional, 8 dígitos
-  const rx = /(?:\+?55\s*)?(?:\(?\s*\d{2}\s*\)?[\s.-]*)?(?:9\s*)?\d{4}[\s.-]*\d{4}\b/g;
-  return Array.from(new Set(Array.from(text.matchAll(rx)).map(m=>m[0].replace(/\s+/g," ").trim())));
-}
-function scoreEvidence({ filetype, distance, repeat, domainGov }){
-  let s = 1;
-  if(distance <= 160) s++;
-  if(["pdf","xls","xlsx","csv"].includes(filetype)) s++;
-  if(repeat >= 2) s++;
-  if(domainGov) s++;
-  return Math.min(s,3);
-}
-
-/* ===== Estados ===== */
-const PHONE_MAP = new Map(); // tel -> {count, sources:Set, score}
-let EVIDS = [];
-function renderTables(){
-  const tb=$("#phones tbody");
-  const rows = Array.from(PHONE_MAP.entries())
-    .sort((a,b)=> b[1].score - a[1].score || b[1].count - a[1].count)
-    .map(([phone,obj])=>{
-      const cls = obj.score>=3 ? "conf-3" : obj.score==2 ? "conf-2" : "conf-1";
-      return `<tr><td><strong>${esc(phone)}</strong></td><td class="${cls}">${obj.score==3?"alto":obj.score==2?"médio":"baixo"}</td><td>${obj.count}</td><td class="small">${esc(Array.from(obj.sources).slice(0,4).join(", "))}${obj.sources.size>4?"…":""}</td></tr>`;
-    }).join("");
-  tb.innerHTML = rows || `<tr><td colspan="4" class="small">Sem candidatos. Execute a busca.</td></tr>`;
-
-  const te=$("#evidences tbody");
-  te.innerHTML = EVIDS.map(ev=>`
-    <tr>
-      <td><span class="badge">${esc(domainOf(ev.url))}</span><div class="small">${esc(ev.title||"")}</div></td>
-      <td class="small"><code>${esc(ev.snippet)}</code></td>
-      <td class="small">${esc(ev.filetype.toUpperCase())} • confid: ${ev.conf}</td>
-      <td><a class="btn" target="_blank" rel="noopener" href="${esc(ev.url)}">Abrir</a></td>
-    </tr>`).join("");
-}
-
-/* ===== UI botões ===== */
-$("#gen").addEventListener("click", ()=>{
-  const cpfRaw = $("#cpf").value.replace(/\D/g,"");
-  if(cpfRaw.length!==11){ alert("Informe um CPF válido (11 dígitos)."); return; }
-  const cpfMasked = fmtCPF(cpfRaw);
-  const email = ($("#email").value||"").trim();
-  const opts = { pdfs: $("#q_pdfs").checked, sheets: $("#q_sheets").checked, docs: $("#q_docs").checked, html: $("#q_html").checked, excludeGov: $("#exclude_gov").checked };
-  const list = buildQueries(cpfMasked, email, opts);
-  renderDorks(list);
-});
-$("#openAll").addEventListener("click", ()=>{
-  const codes = Array.from($("#dorks").querySelectorAll("code")).map(c=>c.textContent.trim());
-  if(!codes.length){ alert("Gere os dorks primeiro."); return; }
-  codes.forEach(q=> window.open(`https://www.google.com/search?q=${enc(q)}`,"_blank","noopener"));
-});
-$("#expCSV").addEventListener("click", ()=>{
-  const rows = [["telefone","confianca","ocorrencias","fontes"]];
-  for(const [tel,o] of PHONE_MAP.entries()) rows.push([tel, o.score, o.count, Array.from(o.sources).join(" | ")]);
-  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv],{type:"text/csv"}); const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob); a.download="telefones_consolidados.csv"; document.body.appendChild(a); a.click(); a.remove();
-});
-$("#expJSON").addEventListener("click", ()=>{
-  const out = Array.from(PHONE_MAP.entries()).map(([k,v])=>({telefone:k, confianca:v.score, ocorrencias:v.count, fontes:Array.from(v.sources)}));
-  const blob = new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="telefones_consolidados.json"; document.body.appendChild(a); a.click(); a.remove();
-});
-
-/* ===== Execução principal ===== */
-$("#run").addEventListener("click", async ()=>{
-  EVIDS=[]; PHONE_MAP.clear(); renderTables();
-
-  const cpfRaw = $("#cpf").value.replace(/\D/g,"");
-  if(cpfRaw.length!==11){ alert("Informe um CPF válido (11 dígitos)."); return; }
-  const cpfMasked = fmtCPF(cpfRaw);
-  const email = ($("#email").value||"").trim();
-  const engine = ($("#engine").value||"ddg").trim().toLowerCase();
-  const proxyInput = ($("#proxy").value||"").trim();
-  const proxy = proxyInput || AUTO_PROXY || "";
-
-  const opts = { pdfs: $("#q_pdfs").checked, sheets: $("#q_sheets").checked, docs: $("#q_docs").checked, html: $("#q_html").checked, excludeGov: $("#exclude_gov").checked, nearOnly: $("#near_only").checked };
-  const queries = buildQueries(cpfMasked, email, opts);
-
-  status([`Ambiente: ${ENV}`, proxy ? `Proxy: ${proxy}` : "Proxy: fallback público", `${queries.length} consultas`]);
-
-  // 1) Busca de links
-  let links = [];
-  for(let i=0;i<queries.length;i++){
-    status([`Buscando (${i+1}/${queries.length})`, queries[i].slice(0,70)+"…"]);
-    try{
-      const results = await fetchSearch({ q: queries[i], engine, proxy });
-      results.slice(0,15).forEach(r=>{
-        if(!r.link) return;
-        const u = r.link.startsWith("http") ? r.link : `http://${r.link}`;
-        links.push({ title: r.title||u, url: u });
-      });
-    }catch(e){/* ignora */}
-  }
-  // Dedup
-  const seen = new Set();
-  links = links.filter(o=>{ if(seen.has(o.url)) return false; seen.add(o.url); return true; }).slice(0,MAX_LINKS);
-  status([`${links.length} fontes encontradas`, "Coletando conteúdo…"]);
-
-  // 2) Coleta & extração
-  const cpfVariants = buildCpfVariants(cpfMasked);
-  const worker = async (item)=>{
-    const url=item.url, ft=fileTypeOf(url);
-    try{
-      const text = await fetchPageText(url, proxy);
-      const hasCpf = cpfVariants.some(v => text.includes(v));
-      if(!hasCpf) return;
-
-      const phones = extractPhones(text);
-      if(!phones.length) return;
-
-      const snips=[]; let localPhones=new Set();
-      for(const ph of phones){
-        let dMin=Infinity, posPH=-1;
-        for(const v of cpfVariants){
-          const p = text.indexOf(v);
-          if(p>=0){
-            const p2 = text.indexOf(ph, p-300);
-            if(p2>=0){ const d=Math.abs(p2-p); if(d<dMin){ dMin=d; posPH=p2; } }
-          }
-        }
-        if(!opts.nearOnly || dMin<400){
-          localPhones.add(ph);
-          const start=Math.max(0,posPH-120), end=Math.min(text.length,posPH+ph.length+120);
-          const snippet=text.substring(start,end).replace(/\s+/g," ").trim();
-          snips.push({ phone:ph, snippet, distance: isFinite(dMin)?dMin:9999 });
-        }
-      }
-      if(!localPhones.size) return;
-
-      const dom=domainOf(url); const isGov=/(^|\.)gov\.br$/i.test(dom);
-      for(const p of localPhones){
-        if(!PHONE_MAP.has(p)) PHONE_MAP.set(p,{count:0,sources:new Set(),score:1});
-        const o=PHONE_MAP.get(p); o.count++; o.sources.add(dom);
-      }
-      const best = snips.sort((a,b)=>a.distance-b.distance)[0];
-      const sc = scoreEvidence({ filetype:ft, distance:best.distance, repeat:1, domainGov:isGov });
-      EVIDS.push({ url, title:item.title, filetype:ft, conf:sc, snippet:`${cpfMasked} … ${best.phone} … ${best.snippet}` });
-    }catch(e){/* ignora */}
+function validaCPF(cpf){
+  const s = onlyDigits(cpf);
+  if(s.length!==11 || /^(\d)\1{10}$/.test(s)) return false;
+  const calc = (base) => {
+    let sum=0, fac=base+1;
+    for(let i=0;i<base;i++) sum += parseInt(s[i],10)*(fac-i);
+    const r = (sum*10)%11;
+    return (r===10?0:r);
   };
+  if(calc(9)!==parseInt(s[9],10)) return false;
+  if(calc(10)!==parseInt(s[10],10)) return false;
+  return true;
+}
+function ensureCPF(){
+  const input = document.getElementById("cpf");
+  const ok = validaCPF(input.value);
+  input.classList.toggle("invalid", !ok);
+  return ok ? { raw: onlyDigits(input.value), fmt: input.value } : null;
+}
 
-  for(let i=0;i<links.length;i+=CONCURRENCY){
-    status([`Lendo fontes ${i+1}–${Math.min(i+CONCURRENCY,links.length)} de ${links.length}`]);
-    const batch = links.slice(i,i+CONCURRENCY).map(worker);
-    await Promise.all(batch);
-  }
+/* ======= Catálogo de plataformas p/ “esqueci minha senha” ======= */
+/* (abrirá a tela de recuperação; o investigador informa o CPF no formulário da própria plataforma) */
+const RESET_PLATFORMS = [
+  ["OLX", "https://www.olx.com.br/ajuda/conta/recuperar-senha"],
+  ["99 (app)", "https://passageiro.99app.com/forgot-password"],
+  ["Shopee", "https://shopee.com.br/buyer/login/forgot-password"],
+  ["iFood", "https://www.ifood.com.br/account/forgot-password"],
+  ["Mercado Livre", "https://www.mercadolivre.com.br/registration/password-recovery"],
+  ["Magazine Luiza", "https://www.magazineluiza.com.br/cliente/recuperar-senha/"],
+  ["Americanas", "https://www.americanas.com.br/senha/recuperar"],
+  ["Submarino", "https://www.submarino.com.br/senha/recuperar"]
+];
 
-  // 3) Recalcula score por repetição e gov
-  for(const [tel,obj] of PHONE_MAP.entries()){
-    const rep=obj.count; let gov=false; for(const s of obj.sources){ if(/(^|\.)gov\.br$/i.test(s)){ gov=true; break; } }
-    obj.score = Math.min(3, 1 + (rep>=2?1:0) + (gov?1:0));
-  }
-  EVIDS.sort((a,b)=> b.conf - a.conf);
+/* ================= GRUPOS (com base no texto de referência) ================= */
+const GRUPOS = [
+  ["Consultas diretas", [
+    ["Mind-7 (dados públicos)", "https://mind-7.org/"],
+    ["CNPJ.biz — se o CPF for MEI", "https://cnpj.biz/"],
+    ["Epieos — se tiver e-mail (OSINT e-mail)", "https://epieos.com/"]
+  ]],
+  ["Google Dorks (por CPF)", [
+    // Dorks do texto (e variações úteis)
+    ["PDF com telefone", "https://www.google.com/search?q=%22%CPF_FMT%%22+telefone+filetype:pdf"],
+    ["site:cnpj.biz (MEI)", "https://www.google.com/search?q=%22%CPF_FMT%%22+site:cnpj.biz"],
+    ["Planilhas XLS", "https://www.google.com/search?q=%22%CPF_FMT%%22+filetype:xls"],
+    ["XLS com telefone (exclui gov.br/brasil)", "https://www.google.com/search?q=filetype:xls+%22%CPF_FMT%%22+telefone+-gov+-brasil"],
+    // variações adicionais
+    ["CSV/XLSX/PDF (amplo)", "https://www.google.com/search?q=%22%CPF_FMT%%22+(filetype:csv+OR+filetype:xlsx+OR+filetype:pdf)"],
+    ["Diários/Transparência", "https://www.google.com/search?q=site:in.gov.br+OR+site:transparencia.*+%22%CPF_FMT%%22+telefone"],
+    ["Portais *.jus.br", "https://www.google.com/search?q=site:*.jus.br+%22%CPF_FMT%%22+telefone"],
+    ["Sindicato/Associação", "https://www.google.com/search?q=%22%CPF_FMT%%22+(sindicato+OR+associados+OR+editais)+telefone"]
+  ]],
+  ["Recuperação de cadastro (pode exibir partes do telefone)", []], // será preenchido via RESET_PLATFORMS
+  ["Outros motores", [
+    ["Bing (amplo)", "https://www.bing.com/search?q=%22%CPF_FMT%%22+telefone"],
+    ["DuckDuckGo (amplo)", "https://duckduckgo.com/?q=%22%CPF_FMT%%22+telefone"]
+  ]]
+];
 
-  status([`OK: ${PHONE_MAP.size} telefones candidatos`, `${EVIDS.length} evidências`]);
-  renderTables();
+/* Insere dinamicamente as plataformas de reset */
+RESET_PLATFORMS.forEach(([nome,url])=>{
+  GRUPOS[2][1].push([`${nome} — “esqueci minha senha”`, url]);
 });
 
-/* Inicial */
-status([`Ambiente: ${ENV}`, "Pronto"]);
+/* ================= Renderização ================= */
+function buildUrl(tpl, cpfFmt, cpfRaw){
+  return tpl.replaceAll("%CPF_FMT%", encodeURIComponent(cpfFmt))
+            .replaceAll("%CPF_RAW%", encodeURIComponent(cpfRaw));
+}
+function montar(cpfFmt, cpfRaw){
+  const fmtBox = document.getElementById("fmtBox");
+  const box = document.getElementById("results");
+  const bar = document.getElementById("exportBar");
+  box.innerHTML = "";
+
+  fmtBox.innerHTML = `<span class="pill">CPF: ${cpfFmt}</span><span class="pill">RAW: ${cpfRaw}</span>`;
+  fmtBox.style.display = "block";
+
+  GRUPOS.forEach(([titulo,itens])=>{
+    const div = document.createElement("div");
+    div.className = "group";
+    const h2  = document.createElement("h2"); h2.textContent = titulo;
+    const ul  = document.createElement("ul");
+
+    itens.forEach(([label,tpl])=>{
+      const li = document.createElement("li");
+      const a  = document.createElement("a");
+      a.textContent = label; a.target = "_blank"; a.rel = "noopener";
+      a.href = buildUrl(tpl, cpfFmt, cpfRaw);
+      li.appendChild(a); ul.appendChild(li);
+    });
+
+    div.appendChild(h2); div.appendChild(ul); box.appendChild(div);
+  });
+
+  bar.style.display = "flex";
+}
+
+/* ================= Exportações ================= */
+function buildRows(cpfFmt, cpfRaw){
+  const rows=[];
+  GRUPOS.forEach(([grupo,itens])=>{
+    itens.forEach(([fonte,tpl])=>{
+      rows.push({CPF: cpfFmt, RAW: cpfRaw, GRUPO: grupo, FONTE: fonte, URL: buildUrl(tpl,cpfFmt,cpfRaw)});
+    });
+  });
+  return rows;
+}
+function exportCSV(){
+  const st = window.__cpf_state; if(!st){ alert("Faça a análise primeiro."); return; }
+  const rows = buildRows(st.cpfFmt, st.cpfRaw);
+  let csv = "CPF;RAW;GRUPO;FONTE;URL\n";
+  rows.forEach(r=>{ csv += `"${r.CPF}";"${r.RAW}";"${r.GRUPO.replace(/"/g,'""')}";"${r.FONTE.replace(/"/g,'""')}";"${r.URL.replace(/"/g,'""')}"\n`; });
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`IAPol_DescTelefone_por_CPF_${st.cpfRaw}.csv`; a.click();
+}
+function exportTXT(){
+  const st = window.__cpf_state; if(!st){ alert("Faça a análise primeiro."); return; }
+  const rows = buildRows(st.cpfFmt, st.cpfRaw);
+  let txt = `IAPol® — Descoberta de Telefone por CPF\nCPF: ${st.cpfFmt} (raw: ${st.cpfRaw})\nData: ${new Date().toLocaleString("pt-BR")}\n\n`;
+  rows.forEach(r=>{ txt += `- [${r.GRUPO}] ${r.FONTE}: ${r.URL}\n`; });
+  const blob = new Blob([txt], {type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`IAPol_DescTelefone_por_CPF_${st.cpfRaw}.txt`; a.click();
+}
+function exportPDF(){
+  const st = window.__cpf_state; if(!st){ alert("Faça a análise primeiro."); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"pt", format:"a4" });
+  const m=48; let y=m;
+  doc.setFont("helvetica","bold"); doc.setFontSize(16);
+  doc.text("IAPol® — Descoberta de Telefone por CPF", m, y); y+=18;
+  doc.setFont("helvetica","normal"); doc.setFontSize(12);
+  doc.text(`CPF: ${st.cpfFmt} (raw: ${st.cpfRaw})`, m, y); y+=8;
+  doc.text(`Data: ${new Date().toLocaleString("pt-BR")}`, m, y); y+=18;
+
+  const rows = buildRows(st.cpfFmt, st.cpfRaw);
+  doc.setFontSize(11);
+  let gAtual = "";
+  rows.forEach(r=>{
+    if(r.GRUPO!==gAtual){
+      if(y>780){ doc.addPage(); y=m; }
+      gAtual=r.GRUPO; doc.setFont("helvetica","bold"); doc.text(gAtual, m, y); y+=12;
+      doc.setFont("helvetica","normal");
+    }
+    const ln = `• ${r.FONTE}: ${r.URL}`;
+    const parts = doc.splitTextToSize(ln, 515);
+    parts.forEach(L=>{ if(y>800){ doc.addPage(); y=m; } doc.text(L, m, y); y+=14; });
+  });
+
+  if(y>800){ doc.addPage(); y=m; }
+  doc.setDrawColor(160); doc.line(m,820,595-m,820);
+  doc.setFontSize(9); doc.setTextColor(120);
+  doc.text("Observação: plataformas de recuperação podem exibir parte do telefone vinculado ao CPF. Respeite LGPD/ToS.", m, 838);
+  doc.save(`IAPol_DescTelefone_por_CPF_${st.cpfRaw}.pdf`);
+}
+function exportXLSX(){
+  const st = window.__cpf_state; if(!st){ alert("Faça a análise primeiro."); return; }
+  const rows = buildRows(st.cpfFmt, st.cpfRaw);
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Telefone_por_CPF");
+  XLSX.writeFile(wb, `IAPol_DescTelefone_por_CPF_${st.cpfRaw}.xlsx`);
+}
+
+/* ================= Fluxo ================= */
+function gerar(){
+  const st = ensureCPF();
+  if(!st){ alert("CPF inválido."); return false; }
+  window.__cpf_state = { cpfRaw: st.raw, cpfFmt: st.fmt };
+  history.replaceState({}, "", location.pathname + "?cpf=" + encodeURIComponent(st.fmt));
+  montar(st.fmt, st.raw);
+  return false;
+}
+(function init(){
+  const p = new URLSearchParams(location.search);
+  const q = p.get("cpf");
+  if(q){
+    document.getElementById("cpf").value = q;
+    const st = ensureCPF();
+    if(st){ window.__cpf_state = { cpfRaw: st.raw, cpfFmt: st.fmt }; montar(st.fmt, st.raw); }
+  }
+})();
 </script>
 </body>
 </html>
