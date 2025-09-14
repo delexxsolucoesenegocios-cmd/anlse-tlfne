@@ -1,3 +1,6 @@
+Segue o **`index.html` completo** já com as correções embutidas (normalização de URLs, `reader()` ajustado, `setViewer()` e `openDirectory()` usando sempre URL absoluta). Basta substituir no seu repositório.
+
+```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -57,7 +60,6 @@
   .footer{margin-top:12px;text-align:center;color:#97acd6;font-size:12px}
 </style>
 
-<!-- jsPDF e SheetJS -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -99,7 +101,7 @@
 
       <div class="viewer">
         <div class="viewer-head">
-          <div class="viewer-url" id="viewerUrl">Nenhum conteúdo carregado</div>
+          <div class="viewer-url" id="viewerUrl">Selecione um diretório à esquerda para pré-visualizar</div>
           <div class="viewer-ctrls">
             <button type="button" onclick="openInNewTab()">Abrir em nova aba</button>
             <button type="button" onclick="toggleReader()">Alternar leitura</button>
@@ -117,8 +119,6 @@
 /* ===================== Detectores/validações ===================== */
 function onlyDigits(s){ return (s||"").replace(/\D+/g,""); }
 function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim()); }
-
-/* CPF: máscara opcional (aplicada só quando claramente é CPF) */
 function maskCPF(s){
   const d = onlyDigits(s).slice(0,11);
   if(d.length<=3) return d;
@@ -136,26 +136,30 @@ function detectType(q){
   const digits = onlyDigits(t);
   if(isEmail(t)) return {type:"email", value:t};
   if(digits.length===11 && validaCPFnum(digits)) return {type:"cpf", value:maskCPF(digits)};
-  // nome completo (heurística: tem espaço e >= 2 palavras)
   if(/\s/.test(t) && t.replace(/\s+/g,' ').trim().split(' ').length>=2) return {type:"nome", value:t.replace(/\s+/g,' ').trim()};
-  // fallback: trata como nome mesmo de uma palavra
   return {type:"nome", value:t};
 }
 
 /* ===================== Reader / Visor ===================== */
-const reader = url => `https://r.jina.ai/http/${url.replace(/^https?:\/\//,'')}`;
-function setViewer(url,{forceReader=false}={}){
+// sempre usa URL absoluta com esquema e no formato aceito pelo r.jina.ai
+function reader(url) {
+  const abs = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  return `https://r.jina.ai/http/${abs}`;
+}
+function setViewer(url, { forceReader = false } = {}) {
+  const abs  = /^https?:\/\//i.test(url) ? url : `https://${url}`;
   const frame = document.getElementById("visor");
   const vurl  = document.getElementById("viewerUrl");
-  const u = forceReader ? reader(url) : url;
-  frame.src = u; vurl.textContent = u;
-  window.__viewer_current = url; window.__viewer_reader = forceReader;
+  const final = forceReader ? reader(abs) : abs;
+  frame.src = final;
+  vurl.textContent = final;
+  window.__viewer_current = abs;
+  window.__viewer_reader  = forceReader;
 }
 function toggleReader(){ if(!window.__viewer_current) return; setViewer(window.__viewer_current,{forceReader:!window.__viewer_reader}); }
 function openInNewTab(){ if(!window.__viewer_current) return; const u=window.__viewer_reader?reader(window.__viewer_current):window.__viewer_current; window.open(u,"_blank"); }
 
 /* ===================== Fontes (por tipo) ===================== */
-/* Plataformas de recuperação: muitas exibem telefone/e-mail mascarados */
 const RESET_PLATFORMS = [
   ["OLX", "https://www.olx.com.br/ajuda/conta/recuperar-senha"],
   ["99 (app)", "https://passageiro.99app.com/forgot-password"],
@@ -167,7 +171,6 @@ const RESET_PLATFORMS = [
   ["Submarino", "https://www.submarino.com.br/senha/recuperar"]
 ];
 
-/* Templates para cada tipo de entrada */
 function sourcesForCPF(cpf){
   const cpfEnc = encodeURIComponent(cpf);
   return [
@@ -197,8 +200,8 @@ function sourcesForEmail(email){
       ["DuckDuckGo", `https://duckduckgo.com/?q=%22${e}%22+telefone+OR+whatsapp`]
     ]],
     ["Redes/Perfis (por e-mail)", [
-      ["LinkedIn (login reset)", "https://www.linkedin.com/checkpoint/rp/request-password-reset"],
-      ["Facebook (login help)", "https://www.facebook.com/login/identify"],
+      ["LinkedIn (reset)", "https://www.linkedin.com/checkpoint/rp/request-password-reset"],
+      ["Facebook (identificar conta)", "https://www.facebook.com/login/identify"],
       ["Twitter/X (reset)", "https://x.com/account/begin_password_reset"]
     ]],
     ["Recuperação de cadastro (informe o e-mail)", RESET_PLATFORMS.map(([n,u])=>[`${n} — “esqueci minha senha”`, u])]
@@ -247,12 +250,14 @@ function buildLists(groups){
 }
 
 async function openDirectory(title, url){
-  setViewer(url,{forceReader:true});
+  const abs = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  setViewer(abs,{forceReader:true});
+
   const pv = document.getElementById("preview");
   pv.style.display="block";
   pv.innerHTML = `<div class="pv-item"><div class="pv-title">Carregando prévia de ${title}…</div></div>`;
   try{
-    const resp = await fetch(reader(url), {mode:"cors"});
+    const resp = await fetch(reader(abs), {mode:"cors"});
     if(!resp.ok) throw new Error(resp.statusText);
     const txt = await resp.text();
     const lines = txt.split("\n").filter(Boolean);
@@ -266,11 +271,11 @@ async function openDirectory(title, url){
     pv.innerHTML = blocks.slice(0,8).map((b,i)=>`
       <div class="pv-item">
         <div class="pv-title">${title} — item ${i+1}</div>
-        <div class="pv-url">${url}</div>
+        <div class="pv-url">${abs}</div>
         <div class="pv-snippet">${b.replace(/\s+/g," ").slice(0,320)}…</div>
         <div style="margin-top:6px">
-          <button type="button" onclick="setViewer('${url.replace(/'/g,"\\'")}',{forceReader:false})">Abrir página original</button>
-          <button type="button" onclick="setViewer('${url.replace(/'/g,"\\'")}',{forceReader:true})">Abrir em leitura</button>
+          <button type="button" onclick="setViewer('${abs.replace(/'/g,"\\'")}',{forceReader:false})">Abrir página original</button>
+          <button type="button" onclick="setViewer('${abs.replace(/'/g,"\\'")}',{forceReader:true})">Abrir em leitura</button>
         </div>
       </div>`).join("") || `<div class="pv-item"><div class="pv-title">${title}</div><div class="pv-snippet">Prévia indisponível.</div></div>`;
   }catch(e){
@@ -283,7 +288,8 @@ function flatten(groups){
   const rows=[];
   groups.forEach(([grupo,itens])=>{
     itens.forEach(([fonte,url])=>{
-      rows.push({GRUPO:grupo, FONTE:fonte, URL:url});
+      const abs = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+      rows.push({GRUPO:grupo, FONTE:fonte, URL:abs});
     });
   });
   return rows;
@@ -362,7 +368,6 @@ function gerar(){
     groups = sourcesForNome(det.value);
   }
 
-  // UI
   window.__query_state = { type: det.type, value: det.value, groups };
   document.getElementById("exportBar").style.display = "flex";
   document.getElementById("fmtBox").innerHTML =
@@ -370,9 +375,9 @@ function gerar(){
   document.getElementById("fmtBox").style.display = "block";
   buildLists(groups);
 
-  // limpar visor/preview
   document.getElementById("preview").style.display="none";
   setViewer("about:blank");
+  document.getElementById("viewerUrl").textContent = "Selecione um diretório à esquerda para pré-visualizar";
   history.replaceState({}, "", location.pathname + "?q=" + encodeURIComponent(det.value));
   return false;
 }
@@ -386,3 +391,4 @@ function gerar(){
 </script>
 </body>
 </html>
+```
